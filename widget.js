@@ -6,12 +6,6 @@
 const GIST_URL = "https://gist.githubusercontent.com/khami_val/f9717592e4d432304943d612178e042a/raw/cm_tasks.json";
 // Как получить URL: см. инструкцию в мини-апп → кнопка "Синхронизировать с виджетом"
 
-const TAG_EMOJI = {
-  content: "📢",
-  tech: "⚙️",
-  teach: "📚",
-  money: "💰"
-};
 
 async function loadData() {
   try {
