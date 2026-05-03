@@ -2,7 +2,7 @@
 // Нативный стиль как системные виджеты iOS
 //
 // ⚙️ ВСТАВЬ СВОЙ GIST URL (без хэша ревизии!):
-const GIST_URL = "https://gist.githubusercontent.com/YOUR_USERNAME/YOUR_GIST_ID/raw/cm_tasks.json"
+const GIST_URL = "https://gist.githubusercontent.com/khami-val/f9717592e4d432304943d612178e042a/raw/4326eb47cb31d5914f95166504c41467f481cac1/cm_tasks.json"
 
 // ─────────────────────────────────────────────
 async function fetchData() {
