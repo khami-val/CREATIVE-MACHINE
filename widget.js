@@ -3,7 +3,7 @@
 // Установка: вставь этот скрипт в Scriptable, добавь виджет на экран блокировки
 //
 // ⚙️ НАСТРОЙКА: вставь свой Gist URL ниже
-const GIST_URL = "https://gist.githubusercontent.com/khami_val/f9717592e4d432304943d612178e042a/raw/cm_tasks.json";
+const GIST_URL = "https://gist.githubusercontent.com/khami-val/f9717592e4d432304943d612178e042a/raw/4326eb47cb31d5914f95166504c41467f481cac1/cm_tasks.json";
 // Как получить URL: см. инструкцию в мини-апп → кнопка "Синхронизировать с виджетом"
 
 
