@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Creative Machine</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0d0d;--surface:#161616;--surface2:#1e1e1e;--surface3:#252525;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#E8FF47;--text:#f0f0f0;--muted:#777;--muted2:#555;
+  --tag-content-bg:rgba(29,158,117,0.15);--tag-content:#5dcaa5;
+  --tag-tech-bg:rgba(55,138,221,0.15);--tag-tech:#85b7eb;
+  --tag-teach-bg:rgba(127,119,221,0.15);--tag-teach:#afa9ec;
+  --tag-money-bg:rgba(239,159,39,0.15);--tag-money:#fac775;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+
+.app-header{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px 10px;}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.06em;color:var(--accent);}
+.progress-wrap{display:flex;align-items:center;gap:8px;}
+.progress-track{width:72px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+.progress-text{font-size:12px;color:var(--muted);font-weight:600;}
+.week-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;}
+.week-tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:5px 12px;font-size:12px;font-weight:600;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Manrope',sans-serif;}
+.tab.active{background:var(--accent);color:#0d0d0d;border-color:var(--accent);}
+
+.views{flex:1;overflow:hidden;position:relative;}
+.view{position:absolute;inset:0;overflow-y:auto;transition:opacity .2s,transform .2s;}
+.view.hidden{opacity:0;pointer-events:none;transform:translateX(20px);}
+
+/* TASKS */
+.tasks-content{padding:14px 16px 120px;}
+.phase-name{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.week-stat{margin-bottom:12px;}
+.stat-pill{display:inline-flex;font-size:12px;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:20px;}
+.stat-pill b{color:var(--text);font-weight:600;margin-left:3px;}
+.task-list{display:flex;flex-direction:column;gap:5px;}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px;display:flex;align-items:flex-start;gap:11px;cursor:pointer;transition:background .12s,transform .08s;user-select:none;-webkit-user-select:none;}
+.task-card:active{transform:scale(.98);background:var(--surface2);}
+.task-card.done{opacity:.45;}
+.task-card.current-task{border-color:rgba(232,255,71,.3);background:rgba(232,255,71,.04);}
+.checkbox{width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(255,255,255,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px;}
+.task-card.done .checkbox{background:var(--accent);border-color:var(--accent);}
+.check-svg{display:none;}
+.task-card.done .check-svg{display:block;}
+.task-body{flex:1;min-width:0;}
+.task-day{font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:600;}
+.task-text{font-size:14px;line-height:1.45;color:var(--text);}
+.task-card.done .task-text{text-decoration:line-through;color:var(--muted);}
+.tag{font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;flex-shrink:0;letter-spacing:.04em;text-transform:uppercase;margin-top:2px;}
+.tag-content{background:var(--tag-content-bg);color:var(--tag-content);}
+.tag-tech{background:var(--tag-tech-bg);color:var(--tag-tech);}
+.tag-teach{background:var(--tag-teach-bg);color:var(--tag-teach);}
+.tag-money{background:var(--tag-money-bg);color:var(--tag-money);}
+.current-badge{font-size:10px;font-weight:700;color:var(--accent);background:rgba(232,255,71,.12);padding:2px 7px;border-radius:4px;margin-left:6px;}
+
+/* AI */
+.ai-content{display:flex;flex-direction:column;height:100%;}
+.ai-context-bar{flex-shrink:0;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.ai-context-bar span{color:var(--accent);font-weight:600;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:88%;display:flex;flex-direction:column;gap:3px;}
+.msg.user{align-self:flex-end;align-items:flex-end;}
+.msg.ai{align-self:flex-start;align-items:flex-start;}
+.msg-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.msg.user .msg-bubble{background:var(--accent);color:#0d0d0d;border-bottom-right-radius:4px;font-weight:500;}
+.msg.ai .msg-bubble{background:var(--surface2);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border);}
+.msg-time{font-size:10px;color:var(--muted2);padding:0 4px;}
+.typing-bubble{background:var(--surface2);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;padding:12px 16px;display:flex;gap:5px;align-items:center;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.changes-banner{margin:0 16px;padding:10px 13px;background:rgba(232,255,71,.08);border:1px solid rgba(232,255,71,.2);border-radius:10px;font-size:13px;color:var(--accent);display:flex;align-items:center;gap:8px;cursor:pointer;}
+.suggestions{flex-shrink:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 16px 4px;}
+.suggestions::-webkit-scrollbar{display:none;}
+.suggestion-chip{flex-shrink:0;padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .12s;font-family:'Manrope',sans-serif;}
+.suggestion-chip:active{background:var(--surface3);color:var(--text);}
+
+/* SYNC */
+.sync-content{padding:16px 16px 120px;}
+.sync-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.sync-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:20px;}
+.sync-step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.step-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.step-num-circle{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#0d0d0d;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-title{font-size:14px;font-weight:600;color:var(--text);}
+.step-body{font-size:13px;color:var(--muted);line-height:1.6;}
+.step-body b{color:var(--text);}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:var(--accent);margin:8px 0;word-break:break-all;line-height:1.5;}
+.copy-btn{width:100%;padding:9px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;transition:background .12s;margin-top:6px;}
+.copy-btn:active{background:var(--surface3);}
+.gist-input{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:'Manrope',sans-serif;outline:none;margin-top:8px;}
+.gist-input::placeholder{color:var(--muted);}
+.gist-input:focus{border-color:rgba(232,255,71,.4);}
+.sync-action-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);color:#0d0d0d;font-size:14px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:8px;transition:opacity .12s;}
+.sync-action-btn:active{opacity:.8;}
+.sync-action-btn:disabled{opacity:.4;cursor:default;}
+.sync-status{padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-top:10px;display:none;}
+.sync-status.success{background:rgba(29,158,117,.15);color:#5dcaa5;border:1px solid rgba(29,158,117,.2);}
+.sync-status.error{background:rgba(239,99,60,.12);color:#f07b5d;border:1px solid rgba(239,99,60,.2);}
+.sync-status.loading{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.widget-preview{background:#000;border-radius:16px;padding:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,.1);}
+.widget-preview-label{font-size:11px;color:var(--muted);margin-bottom:10px;text-align:center;letter-spacing:.05em;}
+.widget-lockscreen{background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;}
+.wl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.wl-brand{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);font-family:monospace;letter-spacing:.08em;}
+.wl-prog{font-size:9px;color:rgba(255,255,255,.35);font-family:monospace;}
+.wl-meta{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:4px;}
+.wl-task{font-size:13px;font-weight:600;color:#fff;line-height:1.35;}
+.wl-phase{font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;}
+
+/* INPUT */
+.input-bar{flex-shrink:0;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end;z-index:20;}
+.input-wrap{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:9px 14px;display:flex;align-items:center;}
+#chatInput{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;resize:none;max-height:100px;line-height:1.4;overflow-y:auto;}
+#chatInput::placeholder{color:var(--muted);}
+.send-btn{width:38px;height:38px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s,opacity .1s;}
+.send-btn:active{transform:scale(.92);}
+.send-btn:disabled{opacity:.4;cursor:default;}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:4px;z-index:25;}
+.nav-btn{padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Manrope',sans-serif;border:none;cursor:pointer;transition:all .15s;letter-spacing:.02em;white-space:nowrap;}
+.nav-btn.active{background:var(--accent);color:#0d0d0d;}
+.nav-btn:not(.active){background:transparent;color:var(--muted);}
+
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);font-size:13px;font-weight:500;padding:9px 18px;border-radius:20px;border:1px solid var(--border2);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;z-index:100;white-space:nowrap;pointer-events:none;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-row">
+    <div class="brand">Creative Machine</div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">0/28</div>
+    </div>
+  </div>
+  <div class="week-tabs" id="weekTabs"></div>
+</div>
+
+<div class="views">
+  <div class="view" id="viewTasks"><div class="tasks-content" id="tasksContent"></div></div>
+  <div class="view hidden" id="viewAi">
+    <div class="ai-content">
+      <div class="ai-context-bar">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#E8FF47" stroke-width="1.2"/><path d="M7 4v3.5l2 1.5" stroke="#E8FF47" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Редактирую: <span>весь план</span>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+  </div>
+  <div class="view hidden" id="viewSync"><div class="sync-content" id="syncContent"></div></div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" id="navTasks" onclick="switchView('Tasks')">Задачи</button>
+  <button class="nav-btn" id="navAi" onclick="switchView('Ai')">AI</button>
+  <button class="nav-btn" id="navSync" onclick="switchView('Sync')">📲 Виджет</button>
+</div>
+
+<div class="input-bar" id="inputBar" style="display:none">
+  <div class="input-wrap"><textarea id="chatInput" rows="1" placeholder="Измени план..."></textarea></div>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8L14 2L10 8L14 14L2 8Z" fill="#0d0d0d"/></svg>
+  </button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const DEFAULT_WEEKS = [
+  {label:"Неделя 1",phase:"Контентная интервенция",tasks:[
+    {day:"День 1",text:"Записать и выложить «Манифест» в Reels/ТГ",tag:"content"},
+    {day:"День 2",text:"Туториал по CSV-автоматизации — выложить везде",tag:"tech"},
+    {day:"День 3",text:"Аналитический разбор 3 креативов в ТГ",tag:"content"},
+    {day:"День 4",text:"Провокационный пост «Дизайн ради дизайна — мусор»",tag:"content"},
+    {day:"День 5",text:"Анонс бесплатного курса + анкета предзаписи",tag:"content"},
+    {day:"День 6",text:"Пост об Escrow и рисках в крипте",tag:"tech"},
+    {day:"День 7",text:"Стрим: «Как войти в нишу с нуля»",tag:"content"},
+  ]},
+  {label:"Неделя 2",phase:"Технический авторитет",tasks:[
+    {day:"День 8",text:"Разбор рабочего сетапа и Master-Project в AE",tag:"tech"},
+    {day:"День 9",text:"Пост о психологии триггеров: звук монетки vs 4K",tag:"content"},
+    {day:"День 10",text:"Видео «AI 2026»: обход фильтров Facebook",tag:"tech"},
+    {day:"День 11",text:"Прямой эфир с разбором портфолио подписчиков",tag:"content"},
+    {day:"День 12",text:"Интервью от байера: «Что нужно рынку?»",tag:"content"},
+    {day:"День 13",text:"Сравнение доходов: Фриланс vs iGaming + ROI",tag:"money"},
+    {day:"День 14",text:"Закрытие окна записи — создание дефицита",tag:"content"},
+  ]},
+  {label:"Неделя 3",phase:"Выполнение обещаний",tasks:[
+    {day:"День 15",text:"Урок 1: Психология и триггеры",tag:"teach"},
+    {day:"День 16",text:"Урок 2: Технический стек и первый крео",tag:"teach"},
+    {day:"День 17",text:"Урок 3: Автоматизация 1 к 100 + шаблоны",tag:"teach"},
+    {day:"День 18",text:"Урок 4: AI-ускорители — генерация ассетов",tag:"teach"},
+    {day:"День 19",text:"Урок 5: Обход модерации и уникализация",tag:"teach"},
+    {day:"День 20",text:"Урок 6: Финансы и безопасность (Escrow)",tag:"teach"},
+    {day:"День 21",text:"Урок 7: Финальный босс — сборка портфолио",tag:"teach"},
+  ]},
+  {label:"Неделя 4",phase:"Grand Slam Pitch",tasks:[
+    {day:"День 22",text:"Публикация работ учеников + теги баинговых чатов",tag:"money"},
+    {day:"День 23",text:"Презентация Advanced Курса и хаба",tag:"money"},
+    {day:"День 24",text:"Открытие продаж + рост цены каждые 24 часа",tag:"money"},
+    {day:"День 25",text:"Видео «Внутрянка Advanced»: ComfyUI и AI-пайплайны",tag:"tech"},
+    {day:"День 26",text:"Пост с дефицитом: «Осталось 5 мест»",tag:"money"},
+    {day:"День 27",text:"Обработка возражений по методу Хормози",tag:"content"},
+    {day:"День 28",text:"Закрытие продаж. Анонс «Закрытого Цеха»",tag:"money"},
+  ]}
+];
+
+const TAG_LABELS = {content:"Контент",tech:"Техника",teach:"Обучение",money:"Деньги"};
+const STORAGE_KEY = 'cm_v4';
+
+let state={}, weeks=[], currentWeek=0, currentView='Tasks';
+let chatHistory=[], isLoading=false;
+let gistToken='', gistId='';
+
+function loadState() {
+  try {
+    const r = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    state=r.done||{}; weeks=r.weeks?r.weeks:JSON.parse(JSON.stringify(DEFAULT_WEEKS));
+    chatHistory=r.chat||[]; gistToken=r.gistToken||''; gistId=r.gistId||'';
+  } catch(e) { state={}; weeks=JSON.parse(JSON.stringify(DEFAULT_WEEKS)); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY,JSON.stringify({done:state,weeks,chat:chatHistory.slice(-40),gistToken,gistId})); } catch(e){}
+}
+
+function tid(w,t){return `${w}_${t}`;}
+function totalDone(){let n=0;weeks.forEach((w,wi)=>w.tasks.forEach((_,ti)=>{if(state[tid(wi,ti)])n++;}));return n;}
+function totalTasks(){return weeks.reduce((s,w)=>s+w.tasks.length,0);}
+function getCurrentTask(){
+  for(let wi=0;wi<weeks.length;wi++)
+    for(let ti=0;ti<weeks[wi].tasks.length;ti++)
+      if(!state[tid(wi,ti)]) return {wi,ti,task:weeks[wi].tasks[ti]};
+  return null;
+}
+
+function updateProgress(){
+  const done=totalDone(),total=totalTasks();
+  document.getElementById('progressFill').style.width=(total?Math.round((done/total)*100):0)+'%';
+  document.getElementById('progressText').textContent=done+'/'+total;
+}
+
+function renderTabs(){
+  document.getElementById('weekTabs').innerHTML=weeks.map((w,i)=>
+    `<button class="tab${i===currentWeek?' active':''}" onclick="switchWeek(${i})">${w.label}</button>`).join('');
+}
+
+function renderTasks(){
+  const week=weeks[currentWeek];
+  const done=week.tasks.filter((_,ti)=>state[tid(currentWeek,ti)]).length;
+  const cur=getCurrentTask();
+  let html=`<div class="phase-name">${week.phase}</div>`;
+  html+=`<div class="week-stat"><div class="stat-pill">Готово:<b>${done}</b> из ${week.tasks.length}</div></div>`;
+  html+=`<div class="task-list">`;
+  week.tasks.forEach((task,ti)=>{
+    const isDone=!!state[tid(currentWeek,ti)];
+    const isCur=cur&&cur.wi===currentWeek&&cur.ti===ti;
+    html+=`<div class="task-card${isDone?' done':''}${isCur?' current-task':''}" onclick="toggle(${currentWeek},${ti})">
+      <div class="checkbox"><svg class="check-svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#0d0d0d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="task-body">
+        <div class="task-day">${task.day}${isCur?'<span class="current-badge">СЕЙЧАС</span>':''}</div>
+        <div class="task-text">${task.text}</div>
+      </div>
+      <div class="tag tag-${task.tag}">${TAG_LABELS[task.tag]||task.tag}</div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('tasksContent').innerHTML=html;
+}
+
+function switchWeek(idx){currentWeek=idx;renderTabs();renderTasks();}
+function toggle(wi,ti){
+  const id=tid(wi,ti); state[id]=!state[id]; saveState();
+  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+  renderTasks(); updateProgress();
+  if(state[id]) showToast('✓ Выполнено');
+  autoSyncGist();
+}
+
+function switchView(v){
+  currentView=v;
+  ['Tasks','Ai','Sync'].forEach(n=>{
+    document.getElementById('view'+n).classList.toggle('hidden',v!==n);
+    document.getElementById('nav'+n).classList.toggle('active',v===n);
+  });
+  document.getElementById('inputBar').style.display=v==='Ai'?'flex':'none';
+  if(v==='Ai'){renderChatHistory();renderSuggestions();setTimeout(()=>scrollChatBottom(),100);}
+  if(v==='Sync') renderSyncView();
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────────────────
+function renderSyncView(){
+  const cur=getCurrentTask();
+  const pt=cur?cur.task:{text:"Все задачи выполнены!",day:"",tag:"content"};
+  const pw=cur?weeks[cur.wi]:{label:"",phase:"Готово"};
+  document.getElementById('syncContent').innerHTML=`
+    <div class="sync-title">Виджет на экран блокировки</div>
+    <div class="sync-desc">Текущая задача появится на экране блокировки iPhone через Scriptable. ~5 минут на настройку.</div>
+
+    <div class="widget-preview">
+      <div class="widget-preview-label">ПРЕДПРОСМОТР ВИДЖЕТА</div>
+      <div class="widget-lockscreen">
+        <div class="wl-top"><div class="wl-brand">CREATIVE MACHINE</div><div class="wl-prog">${totalDone()}/${totalTasks()}</div></div>
+        <div class="wl-meta">${pt.day}${pw.label?' · '+pw.label:''}</div>
+        <div class="wl-task">${pt.text}</div>
+        <div class="wl-phase">${pw.phase}</div>
+      </div>
+    </div>
+
+    <div class="sync-step">
+      <div class="step-head"><div class="step-num-circle">1</div><div class="step-title">Скачай Scriptable</div></div>
+      <div class="step-body">Бесплатное приложение в App Store для JS-виджетов.</div>
+      <button class="copy-btn" onclick="openLink('https://apps.apple.com/app/scriptable/id1405459188')">Открыть App Store →</button>
+    </div>
+
+    <div class="sync-step">
+      <div class="step-head"><div class="step-num-circle">2</div><div class="step-title">GitHub Token для синхронизации</div></div>
+      <div class="step-body">Нужен бесплатный GitHub аккаунт.<br><br>
+        <b>Получить токен:</b> GitHub → Settings → Developer settings → Personal access tokens → Generate new token → отметь <code style="background:var(--surface3);padding:1px 5px;border-radius:4px;font-size:11px">gist</code>
+      </div>
+      <input class="gist-input" id="gistTokenInput" type="password" placeholder="Вставь токен (ghp_...)" oninput="gistToken=this.value;saveState()">
+      <button class="copy-btn" onclick="openLink('https://github.com/settings/tokens/new?scopes=gist&description=CreativeMachine')">Получить токен на GitHub →</button>
+    </div>
+
+    <div class="sync-step">
+      <div class="step-head"><div class="step-num-circle">3</div><div class="step-title">Синхронизируй план</div></div>
+      <div class="step-body">Нажми кнопку — план загрузится в GitHub Gist. После этого виджет будет обновляться автоматически каждый раз когда отмечаешь задачи.</div>
+      ${gistId?`<div class="code-block">✓ Gist ID: ${gistId}</div>`:''}
+      <button class="sync-action-btn" id="syncBtn" onclick="syncToGist()">${gistId?'↺ Обновить данные':'↑ Создать Gist и синхронизировать'}</button>
+      <div class="sync-status" id="syncStatus"></div>
+    </div>
+
+    <div class="sync-step">
+      <div class="step-head"><div class="step-num-circle">4</div><div class="step-title">Скрипт для Scriptable</div></div>
+      <div class="step-body">Скопируй URL и вставь в скрипт виджета в строку <code style="background:var(--surface3);padding:1px 5px;border-radius:4px;font-size:11px">GIST_URL</code>.</div>
+      ${gistId
+        ?`<div class="code-block" id="gistRawUrl">https://gist.githubusercontent.com/YOUR_USER/${gistId}/raw/cm_tasks.json</div>
+           <button class="copy-btn" onclick="copyText(document.getElementById('gistRawUrl').textContent)">Скопировать URL Gist</button>`
+        :`<div class="step-body" style="margin-top:8px;color:var(--muted2)">Сначала выполни шаг 3</div>`
+      }
+    </div>
+
+    <div class="sync-step">
+      <div class="step-head"><div class="step-num-circle">5</div><div class="step-title">Добавь виджет на экран блокировки</div></div>
+      <div class="step-body">
+        1. Открой Scriptable → «+» → вставь скрипт виджета (файл <b>creative_machine_widget.js</b>)<br><br>
+        2. Долгое нажатие на экран блокировки → <b>Настроить</b><br><br>
+        3. Нажми «+» под часами → найди <b>Scriptable</b><br><br>
+        4. Выбери прямоугольный виджет → укажи скрипт<br><br>
+        ✓ Готово! Текущая задача появится на экране блокировки.
+      </div>
+    </div>
+  `;
+  if(document.getElementById('gistTokenInput')) document.getElementById('gistTokenInput').value=gistToken;
+}
+
+async function syncToGist(){
+  const token=(document.getElementById('gistTokenInput')?.value||'').trim()||gistToken;
+  if(!token){showSyncStatus('error','Вставь GitHub Token в поле выше');return;}
+  gistToken=token; saveState();
+  const btn=document.getElementById('syncBtn'); btn.disabled=true;
+  showSyncStatus('loading','Синхронизирую...');
+  const content=JSON.stringify({weeks,done:state},null,2);
+  try {
+    let resp;
+    if(gistId){
+      resp=await fetch(`https://api.github.com/gists/${gistId}`,{method:'PATCH',
+        headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+        body:JSON.stringify({files:{'cm_tasks.json':{content}}})});
+    } else {
+      resp=await fetch('https://api.github.com/gists',{method:'POST',
+        headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+        body:JSON.stringify({description:'Creative Machine Tasks',public:false,files:{'cm_tasks.json':{content}}})});
+    }
+    const data=await resp.json();
+    if(data.id){
+      gistId=data.id; saveState();
+      showSyncStatus('success','✓ Синхронизировано! Виджет обновится автоматически.');
+      if(tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      setTimeout(()=>renderSyncView(),800);
+    } else {
+      showSyncStatus('error','Ошибка: '+(data.message||'проверь токен'));
+    }
+  } catch(e){ showSyncStatus('error','Ошибка сети. Попробуй снова.'); }
+  btn.disabled=false;
+}
+
+async function autoSyncGist(){
+  if(!gistToken||!gistId) return;
+  try {
+    await fetch(`https://api.github.com/gists/${gistId}`,{method:'PATCH',
+      headers:{'Authorization':`token ${gistToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({files:{'cm_tasks.json':{content:JSON.stringify({weeks,done:state},null,2)}}})});
+  } catch(e){}
+}
+
+function showSyncStatus(type,msg){
+  const el=document.getElementById('syncStatus'); if(!el) return;
+  el.style.display='block'; el.className='sync-status '+type; el.textContent=msg;
+}
+function copyText(t){ navigator.clipboard?.writeText(t).then(()=>showToast('Скопировано!')); }
+function openLink(url){ window.open(url,'_blank'); }
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+function renderChatHistory(){
+  const el=document.getElementById('chatMessages');
+  if(!chatHistory.length){el.innerHTML=`<div class="msg ai"><div class="msg-bubble">Привет! Скажи что изменить в плане — добавлю задачи, переименую фазы или перестрою любую неделю.</div></div>`;return;}
+  el.innerHTML=chatHistory.map(m=>`<div class="msg ${m.role}"><div class="msg-bubble">${escHtml(m.content)}</div><div class="msg-time">${m.time||''}</div></div>`).join('');
+}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function addMsg(role,content){
+  const time=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  chatHistory.push({role,content,time});
+  const el=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className=`msg ${role}`;
+  div.innerHTML=`<div class="msg-bubble">${escHtml(content)}</div><div class="msg-time">${time}</div>`;
+  el.appendChild(div); scrollChatBottom();
+}
+function showTyping(){
+  const el=document.getElementById('chatMessages');
+  const div=document.createElement('div'); div.className='msg ai'; div.id='typingIndicator';
+  div.innerHTML=`<div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  el.appendChild(div); scrollChatBottom();
+}
+function hideTyping(){document.getElementById('typingIndicator')?.remove();}
+function scrollChatBottom(){const el=document.getElementById('chatMessages');el.scrollTop=el.scrollHeight;}
+function renderSuggestions(){
+  const SUGG=["Добавь задачу про TikTok в неделю 1","Сделай неделю 2 агрессивнее","Добавь 5-ю неделю для масштабирования","Покажи сводку прогресса"];
+  document.getElementById('suggestions').innerHTML=SUGG.map(s=>`<div class="suggestion-chip" onclick="useSugg('${s}')">${s}</div>`).join('');
+}
+function useSugg(t){document.getElementById('chatInput').value=t;sendMessage();}
+
+async function sendMessage(){
+  if(isLoading) return;
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim(); if(!text) return;
+  input.value=''; adjustTA(input); addMsg('user',text);
+  document.getElementById('sendBtn').disabled=true; isLoading=true; showTyping();
+  const sys=`Ты — AI-ассистент для редактирования таск-трекера «Creative Machine» (iGaming affiliate marketing roadmap).
+ТЕКУЩИЙ ПЛАН: ${JSON.stringify(weeks,null,2)}
+Теги: content, tech, teach, money
+Если пользователь просит изменить план — верни обновлённый массив в <PLAN>...</PLAN> и объясни что изменил.
+Если просто спрашивает — отвечай текстом. Коротко, по-русски.`;
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,
+        messages:[...chatHistory.slice(-10).filter(m=>m.role!=='system').map(m=>({role:m.role==='ai'?'assistant':'user',content:m.content})),{role:'user',content:text}]
+      })});
+    const data=await resp.json();
+    const raw=data.content?.find(b=>b.type==='text')?.text||'Ошибка.';
+    hideTyping();
+    const pm=raw.match(/<PLAN>([\s\S]*?)<\/PLAN>/);
+    const aiText=raw.replace(/<PLAN>[\s\S]*?<\/PLAN>/g,'').trim();
+    if(pm){
+      try{
+        weeks=JSON.parse(pm[1].trim()); saveState();
+        renderTabs(); renderTasks(); updateProgress();
+        addMsg('ai',aiText||'План обновлён!');
+        showChangeBanner(); autoSyncGist();
+      }catch(e){addMsg('ai',aiText||raw);}
+    } else {addMsg('ai',aiText||raw);}
+  }catch(e){hideTyping();addMsg('ai','Ошибка соединения.');}
+  isLoading=false; document.getElementById('sendBtn').disabled=false; saveState();
+}
+function showChangeBanner(){
+  document.getElementById('changeBanner')?.remove();
+  const b=document.createElement('div'); b.className='changes-banner'; b.id='changeBanner';
+  b.innerHTML=`<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,10.5 12,3.5" stroke="#E8FF47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> План обновлён — нажми посмотреть`;
+  b.onclick=()=>{switchView('Tasks');b.remove();};
+  document.getElementById('chatMessages').appendChild(b); scrollChatBottom();
+  if(tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+}
+function adjustTA(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+document.getElementById('chatInput').addEventListener('input',function(){adjustTA(this);});
+document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+loadState(); renderTabs(); renderTasks(); updateProgress();
+</script>
+</body>
+</html>
